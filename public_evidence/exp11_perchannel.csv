@@ -1,0 +1,4 @@
+mode,N,dim,trials,accuracy,std,experiment
+scalar-0.99,1024,16,8,0.0,0.0,perchannel_decay
+scalar-0.999,1024,16,8,0.5,0.5345224838248488,perchannel_decay
+perchannel,1024,16,8,0.625,0.5175491695067657,perchannel_decay

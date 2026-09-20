@@ -1,0 +1,13 @@
+distractor_scale,N,position_frac,trials,accuracy,experiment
+0.001,1024,0.1,6,1.0,distractor_sensitivity
+0.001,1024,0.9,6,1.0,distractor_sensitivity
+0.001,4096,0.1,6,1.0,distractor_sensitivity
+0.001,4096,0.9,6,1.0,distractor_sensitivity
+0.01,1024,0.1,6,0.6666666666666666,distractor_sensitivity
+0.01,1024,0.9,6,0.6666666666666666,distractor_sensitivity
+0.01,4096,0.1,6,0.16666666666666666,distractor_sensitivity
+0.01,4096,0.9,6,0.16666666666666666,distractor_sensitivity
+0.1,1024,0.1,6,0.16666666666666666,distractor_sensitivity
+0.1,1024,0.9,6,0.16666666666666666,distractor_sensitivity
+0.1,4096,0.1,6,0.0,distractor_sensitivity
+0.1,4096,0.9,6,0.0,distractor_sensitivity

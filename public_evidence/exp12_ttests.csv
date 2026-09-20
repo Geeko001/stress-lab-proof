@@ -1,0 +1,10 @@
+comparison,t,p_normal_approx,n1,n2
+relu>elu+1@m8,7.748,0.0,15,15
+centered>elu+1@m16,31.741,0.0,15,25
+centered-orth>elu-orth@m16,149.0,0.0,10,10
+perchannel>scalar.999,0.475,0.6347,8,8
+oracle>fixed.99,2.845,0.0044,20,20
+A8>random,0.234,0.8153,40,40
+hybrid-w128>w0-recent,1.0,0.3173,8,8
+multihead-h1~h4@m16,0.349,0.7269,6,6
+hardgate~off@m8,0.0,1.0,6,6

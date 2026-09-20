@@ -1,0 +1,3 @@
+mode,N,dim,trials,accuracy,std,experiment
+oracle-c,2048,16,8,0.875,0.3535533905932738,frozen_calib
+frozen-c,2048,16,8,0.375,0.5175491695067657,frozen_calib

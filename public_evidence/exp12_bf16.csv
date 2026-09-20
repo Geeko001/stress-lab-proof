@@ -1,0 +1,4 @@
+acc_dtype,n_steps,ineffective,rel_error_vs_fp64,experiment
+float16,60,49,0.000517293174848068,bf16
+bfloat16,60,52,0.0028996129927246557,bf16
+float32,60,36,8.795115759961896e-08,bf16

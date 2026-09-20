@@ -1,0 +1,4 @@
+alphabet,N,dim,trials,accuracy,std,experiment
+8,2048,16,40,0.675,0.47434164902525683,compressibility
+64,2048,16,40,0.55,0.5038314736557788,compressibility
+-1,2048,16,40,0.65,0.48304589153964794,compressibility

@@ -1,0 +1,5 @@
+N,dim,trials,coarse_accuracy,coarse_std,fine_accuracy,fine_std,experiment
+128,16,8,1.0,0.0,0.0,0.0,coarse_vs_fine
+512,16,8,1.0,0.0,0.0,0.0,coarse_vs_fine
+2048,16,8,1.0,0.0,0.0,0.0,coarse_vs_fine
+8192,16,8,1.0,0.0,0.0,0.0,coarse_vs_fine

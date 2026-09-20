@@ -1,0 +1,20 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Opiumm\Desktop\strress test lab\.venv\Scripts\python.exe
+cachedir: .pytest_cache
+rootdir: C:\Users\Opiumm\Desktop\strress test lab
+plugins: anyio-4.15.1
+collecting ... collected 10 items
+
+tests/test_basic.py::test_state_update PASSED                            [ 10%]
+tests/test_basic.py::test_softmax_retrieves_known_value PASSED           [ 20%]
+tests/test_basic.py::test_linear_retrieves_single_value PASSED           [ 30%]
+tests/test_basic.py::test_seed_reproducibility PASSED                    [ 40%]
+tests/test_basic.py::test_csv_export PASSED                              [ 50%]
+tests/test_basic.py::test_json_export PASSED                             [ 60%]
+tests/test_basic.py::test_plots_generate PASSED                          [ 70%]
+tests/test_basic.py::test_safety_limits PASSED                           [ 80%]
+tests/test_basic.py::test_dimensionality_sweep PASSED                    [ 90%]
+tests/test_basic.py::test_high_res_save PASSED                           [100%]
+
+============================= 10 passed in 4.89s ==============================
+

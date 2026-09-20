@@ -1,0 +1,16 @@
+mode,N,trials,accuracy,experiment
+fixed-1.0,512,10,1.0,latch_N
+fixed-1.0,1024,10,0.9,latch_N
+fixed-1.0,2048,10,0.6,latch_N
+fixed-1.0,4096,10,0.4,latch_N
+fixed-1.0,8192,10,0.2,latch_N
+fixed-0.99,512,10,0.3,latch_N
+fixed-0.99,1024,10,0.0,latch_N
+fixed-0.99,2048,10,0.1,latch_N
+fixed-0.99,4096,10,0.1,latch_N
+fixed-0.99,8192,10,0.0,latch_N
+oracle,512,10,1.0,latch_N
+oracle,1024,10,0.9,latch_N
+oracle,2048,10,0.6,latch_N
+oracle,4096,10,0.3,latch_N
+oracle,8192,10,0.3,latch_N

@@ -1,0 +1,8 @@
+m,dim,trials,linear_mean,linear_std,softmax_mean,softmax_std,feature_map,experiment
+2,16,10,1.0,0.0,1.0,0.0,centered_elu,orthogonal_keys
+4,16,10,1.0,0.0,0.625,0.27003086243366087,centered_elu,orthogonal_keys
+8,16,10,1.0,0.0,0.225,0.11486707293408518,centered_elu,orthogonal_keys
+16,16,10,1.0,0.0,0.09375,0.04419417382415922,centered_elu,orthogonal_keys
+32,16,10,0.5,0.0,0.040625,0.015095184110613998,centered_elu,orthogonal_keys
+64,16,10,0.25,0.0,0.021875,0.008068715304598786,centered_elu,orthogonal_keys
+128,16,10,0.125,0.0,0.01015625,0.003773796027653499,centered_elu,orthogonal_keys

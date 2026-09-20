@@ -1,0 +1,193 @@
+{
+  "bundle_generated_utc": "2026-09-17T12:38:23Z",
+  "seed": 42,
+  "env": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "matplotlib": "3.11.2",
+    "streamlit": "1.64.0",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "exp1_d16_m2_accuracy": 0.96,
+  "exp1_d16_m128_accuracy": 0.0081,
+  "exp2_mean_accuracy_by_N": {
+    "128": 1.0,
+    "512": 1.0,
+    "1024": 0.8,
+    "4096": 0.2
+  },
+  "exp3_ineffective_updates_by_precision": {
+    "float16": 49,
+    "float32": 36,
+    "float64": 7
+  },
+  "unit_tests_passed": true,
+  "exp4_accuracy_by_N": {
+    "128": {
+      "linear": 1.0,
+      "softmax": 1.0
+    },
+    "512": {
+      "linear": 1.0,
+      "softmax": 1.0
+    },
+    "1024": {
+      "linear": 0.9,
+      "softmax": 1.0
+    },
+    "4096": {
+      "linear": 0.3667,
+      "softmax": 1.0
+    }
+  },
+  "exp4_N4096_time_ms": {
+    "linear": 138.655,
+    "softmax": 43.931
+  },
+  "exp4_N4096_bytes": {
+    "linear": 2176,
+    "softmax": 1048576
+  },
+  "followup_drift_exponent": null,
+  "followup_state_norm_slope": 0.448,
+  "followup_mstar_per_dim": {
+    "8": 8,
+    "16": 8,
+    "32": 8,
+    "64": 8
+  },
+  "followup_exp1_d16_m2_CI95": 0.0543,
+  "followup_exp1_d16_m128_CI95": 0.0006,
+  "followup_long_accuracy_by_N": {
+    "16384": 0.0,
+    "65536": 0.0,
+    "262144": 0.1,
+    "1048576": 0.0
+  },
+  "followup_gated_accuracy_by_gamma": {
+    "1.0": 0.4,
+    "0.9": 0.0,
+    "0.99": 0.1,
+    "0.999": 0.1,
+    "0.9999": 0.3
+  },
+  "followup_hybrid_w128_recent": 1.0,
+  "followup_selective_oracle": 0.25,
+  "followup_coarse_vs_fine_at_8192": {
+    "coarse": 1.0,
+    "fine": 0.0
+  },
+  "followup_orth_m16_linear": 0.06875,
+  "followup_drift_note": "relative error saturates at ~1.0 from N=128 (washed output ~= 0 by construction); no compounding exponent identifiable \u2014 finding is total washout",
+  "followup_fp16_drift_vs_fp64_by_gamma": {
+    "0.99": 1.077131094562143e-05,
+    "0.999": 2.7170148948026157e-05
+  },
+  "followup_precision_note": "binary recall identical across fp64/fp32/fp16; continuous output drift orders fp16 > fp32 ~= 0",
+  "batch3_compress_by_alphabet": {
+    "8": 0.75,
+    "64": 0.625,
+    "-1": 0.625
+  },
+  "batch3_perchannel_by_mode": {
+    "scalar-0.99": 0.0,
+    "scalar-0.999": 0.5,
+    "perchannel": 0.625
+  },
+  "batch3_multihead_m16": {
+    "h1_d64": 0.094,
+    "h4_d32": 0.083
+  },
+  "batch3_topups": {
+    "selective_trials": 20,
+    "gated_trials": 20
+  },
+  "batch4_horizon_crossings": {
+    "0.99": {
+      "N50": null,
+      "inv_1mg": 99.99999999999991,
+      "fp32_bound": 1663.5499999999986
+    },
+    "0.999": {
+      "N50": 1024.0,
+      "inv_1mg": 999.9999999999991,
+      "fp32_bound": 16635.499999999985
+    },
+    "0.9999": {
+      "N50": 3072.0,
+      "inv_1mg": 10000.0000000011,
+      "fp32_bound": 166355.00000001834
+    }
+  },
+  "batch4_ttests": [
+    {
+      "comparison": "relu>elu+1@m8",
+      "t": 7.748,
+      "p_normal_approx": 0.0,
+      "n1": 15,
+      "n2": 15
+    },
+    {
+      "comparison": "centered>elu+1@m16",
+      "t": 31.741,
+      "p_normal_approx": 0.0,
+      "n1": 15,
+      "n2": 25
+    },
+    {
+      "comparison": "centered-orth>elu-orth@m16",
+      "t": 149.0,
+      "p_normal_approx": 0.0,
+      "n1": 10,
+      "n2": 10
+    },
+    {
+      "comparison": "perchannel>scalar.999",
+      "t": 0.475,
+      "p_normal_approx": 0.6347,
+      "n1": 8,
+      "n2": 8
+    },
+    {
+      "comparison": "oracle>fixed.99",
+      "t": 2.845,
+      "p_normal_approx": 0.0044,
+      "n1": 20,
+      "n2": 20
+    },
+    {
+      "comparison": "A8>random",
+      "t": 0.234,
+      "p_normal_approx": 0.8153,
+      "n1": 40,
+      "n2": 40
+    },
+    {
+      "comparison": "hybrid-w128>w0-recent",
+      "t": 1.0,
+      "p_normal_approx": 0.3173,
+      "n1": 8,
+      "n2": 8
+    },
+    {
+      "comparison": "multihead-h1~h4@m16",
+      "t": 0.349,
+      "p_normal_approx": 0.7269,
+      "n1": 6,
+      "n2": 6
+    },
+    {
+      "comparison": "hardgate~off@m8",
+      "t": 0.0,
+      "p_normal_approx": 1.0,
+      "n1": 6,
+      "n2": 6
+    }
+  ],
+  "batch4_ci_rows": 193,
+  "batch4_unrunnable": {
+    "real_weights": "no torch/GPU/RAM \u2014 documented, not attempted",
+    "learned_gating": "no training loop \u2014 random-gate control bounds it instead"
+  }
+}

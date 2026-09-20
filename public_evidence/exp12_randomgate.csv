@@ -1,0 +1,13 @@
+mode,N,dim,trials,accuracy,std,experiment
+fixed-0.99,1024,16,8,0.0,0.0,random_gate
+fixed-0.99,2048,16,8,0.125,0.3535533905932738,random_gate
+fixed-0.99,4096,16,8,0.125,0.3535533905932738,random_gate
+fixed-0.99,8192,16,8,0.0,0.0,random_gate
+oracle,1024,16,8,0.875,0.3535533905932738,random_gate
+oracle,2048,16,8,0.75,0.4629100498862757,random_gate
+oracle,4096,16,8,0.25,0.4629100498862757,random_gate
+oracle,8192,16,8,0.25,0.4629100498862757,random_gate
+random,1024,16,8,0.0,0.0,random_gate
+random,2048,16,8,0.25,0.4629100498862757,random_gate
+random,4096,16,8,0.125,0.3535533905932738,random_gate
+random,8192,16,8,0.0,0.0,random_gate

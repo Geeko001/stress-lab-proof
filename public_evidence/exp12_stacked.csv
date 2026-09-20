@@ -1,0 +1,9 @@
+mode,N,dim,position_frac,trials,accuracy,std,experiment
+linear-only,4096,16,0.1,8,0.375,0.5175491695067657,stacked
+linear-only,4096,16,0.9,8,0.375,0.5175491695067657,stacked
+hybrid-only,4096,16,0.1,8,0.375,0.5175491695067657,stacked
+hybrid-only,4096,16,0.9,8,0.375,0.5175491695067657,stacked
+decayed-only,4096,16,0.1,8,0.125,0.3535533905932738,stacked
+decayed-only,4096,16,0.9,8,0.125,0.3535533905932738,stacked
+stacked,4096,16,0.1,8,0.125,0.3535533905932738,stacked
+stacked,4096,16,0.9,8,0.125,0.3535533905932738,stacked

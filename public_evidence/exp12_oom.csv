@@ -1,0 +1,4 @@
+N,status,detail,bytes_theory
+32768,skipped-by-analysis,4.3GB score matrix exceeds 3.7GB RAM by construction,4294967296
+16384,ok,"OK 128.8 798.057540945028
+",1073741824

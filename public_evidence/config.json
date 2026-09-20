@@ -1,0 +1,128 @@
+{
+  "seed": 42,
+  "exp1": {
+    "dims": [
+      8,
+      16,
+      32,
+      64
+    ],
+    "m_values": [
+      2,
+      4,
+      8,
+      16,
+      32,
+      64,
+      128
+    ],
+    "trials": 25,
+    "feature_map": "elu+1",
+    "precision": "float64"
+  },
+  "exp2": {
+    "N_values": [
+      128,
+      512,
+      1024,
+      4096
+    ],
+    "positions": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "dim": 16,
+    "trials": 10,
+    "feature_map": "elu+1",
+    "precision": "float64"
+  },
+  "exp3": {
+    "precisions": [
+      "float64",
+      "float32",
+      "float16"
+    ],
+    "n_steps": 60,
+    "decay": 0.5,
+    "gammas": [
+      0.99,
+      0.999,
+      0.9999
+    ]
+  },
+  "generated_utc": "2026-09-17T12:38:23Z",
+  "env": {
+    "python": "3.14.7",
+    "numpy": "2.5.3",
+    "pandas": "3.0.5",
+    "matplotlib": "3.11.2",
+    "streamlit": "1.64.0",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "exp4": {
+    "N_values": [
+      128,
+      512,
+      1024,
+      4096
+    ],
+    "dim": 16,
+    "trials": 10,
+    "positions": [
+      0.1,
+      0.5,
+      0.9
+    ],
+    "seed": 42,
+    "feature_map": "elu+1",
+    "precision": "float64",
+    "added_utc": "2026-09-17T14:12:23Z"
+  },
+  "followups": {
+    "seed": 42,
+    "featuremaps": {
+      "dims": [
+        16,
+        32
+      ],
+      "trials": 15
+    },
+    "long_length": {
+      "N": [
+        16384,
+        65536,
+        262144,
+        1048576
+      ],
+      "trials": "3 (2 at 1M)"
+    },
+    "seeds": [
+      42,
+      43,
+      44,
+      45
+    ],
+    "gated": {
+      "N": 4096,
+      "trials": 10
+    },
+    "mitigations": {
+      "N": "1024-4096",
+      "trials": 8
+    }
+  },
+  "batch3": {
+    "seed": 42,
+    "note": "paper-gap audit probes",
+    "new_modules": [
+      "experiments/variants.py",
+      "centered_elu map"
+    ]
+  },
+  "batch4": {
+    "seed": 42,
+    "note": "final paper-gap audit",
+    "new_module": "experiments/finalbatch.py"
+  }
+}
