@@ -1,7 +1,7 @@
 ============================= test session starts =============================
-platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- C:\Users\Opiumm\Desktop\strress test lab\.venv\Scripts\python.exe
+platform win32 -- Python 3.14.7, pytest-9.1.1, pluggy-1.6.0 -- <venv>/Scripts/python.exe
 cachedir: .pytest_cache
-rootdir: C:\Users\Opiumm\Desktop\strress test lab
+rootdir: <repo>
 plugins: anyio-4.15.1
 collecting ... collected 10 items
 

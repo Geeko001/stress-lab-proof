@@ -154,8 +154,12 @@ def main():
     print("[5/5] Unit-test report ...")
     proc = subprocess.run([sys.executable, "-m", "pytest", "tests/", "-v"],
                           capture_output=True, text=True, cwd=ROOT)
-    (OUT / "pytest_report.txt").write_text(proc.stdout + "\n" + proc.stderr,
-                                            encoding="utf-8")
+    report = proc.stdout + "\n" + proc.stderr
+    # Scrub local machine paths so the committed bundle carries no
+    # username / absolute-path info. Test results themselves are untouched.
+    report = report.replace(sys.executable, "<venv>/Scripts/python.exe")
+    report = report.replace(str(ROOT), "<repo>")
+    (OUT / "pytest_report.txt").write_text(report, encoding="utf-8")
     tests_ok = proc.returncode == 0
     print(f"      tests passed: {tests_ok}")
 
