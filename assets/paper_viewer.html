@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<!-- Paper 1 reading room: Mac-style PDF viewer (PDF.js) with paper mode,
+     fullscreen/expand, smooth scroll, text highlighter and pen annotations.
+     Served inside the Streamlit app via st.components.v1.html.
+     app.py replaces the PDF placeholder below with the base64 paper PDF before rendering.
+     Annotations persist per-browser in localStorage (no server round-trip). -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  :root{
+    --bar:#f6f6f8; --bar-border:#d9d9de; --ink:#1d1d1f; --muted:#8e8e93;
+    --desk:#e8e8ec; --page-shadow:0 10px 30px rgba(0,0,0,.18);
+    --paper-bg:#f3ead3; --accent:#0a84ff;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100%;font-family:-apple-system,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--desk);color:var(--ink)}
+  .mac{height:100vh;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;background:var(--desk);border:1px solid var(--bar-border)}
+  .mac.expanded{position:fixed;inset:0;z-index:9999;height:100vh;border-radius:0}
+  /* ---- title bar ---- */
+  .titlebar{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--bar);border-bottom:1px solid var(--bar-border);user-select:none}
+  .lights{display:flex;gap:8px}
+  .lights span{width:12px;height:12px;border-radius:50%;display:block;border:1px solid rgba(0,0,0,.12)}
+  .lights .r{background:#ff5f57}.lights .y{background:#febc2e}.lights .g{background:#28c840;cursor:pointer}
+  .doctitle{flex:1;text-align:center;font-size:13px;font-weight:600;color:#3a3a3c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .tbtn{border:1px solid var(--bar-border);background:#fff;border-radius:8px;font-size:12px;padding:5px 10px;cursor:pointer;color:var(--ink)}
+  .tbtn:hover{background:#efeff2}.tbtn.on{background:#dbe9ff;border-color:var(--accent);color:#062f66}
+  /* ---- toolbar ---- */
+  .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:8px 12px;background:var(--bar);border-bottom:1px solid var(--bar-border);font-size:12px}
+  .grp{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--bar-border);border-radius:10px;padding:4px 8px}
+  .tool{border:0;background:transparent;border-radius:7px;font-size:13px;padding:5px 8px;cursor:pointer;color:#3a3a3c}
+  .tool:hover{background:#efeff2}.tool.on{background:#dbe9ff;box-shadow:inset 0 0 0 1px var(--accent)}
+  .sw{width:18px;height:18px;border-radius:50%;border:2px solid transparent;cursor:pointer;padding:0}
+  .sw.on{border-color:var(--ink)}
+  input[type=range]{width:90px;accent-color:var(--accent)}
+  .pagebox{width:52px;border:1px solid var(--bar-border);border-radius:7px;padding:4px 6px;font-size:12px;text-align:center}
+  /* ---- scroll area / pages ---- */
+  #scroller{flex:1;overflow-y:auto;scroll-behavior:smooth;padding:28px 12px 60px;display:flex;flex-direction:column;align-items:center;gap:22px;background:var(--desk)}
+  body.paper #scroller{background:var(--paper-bg)}
+  body.paper .mac{background:var(--paper-bg)}
+  .page{position:relative;background:#fff;box-shadow:var(--page-shadow);border-radius:3px}
+  body.paper .page{background:#fffdf4}
+  body.paper .page canvas.main{filter:sepia(.45) contrast(.98)}
+  canvas.main{display:block;border-radius:3px}
+  .textLayer{position:absolute;inset:0;overflow:hidden;line-height:1;user-select:text}
+  .textLayer span{position:absolute;color:transparent;white-space:pre;transform-origin:0 0;cursor:text}
+  .textLayer ::selection{background:rgba(10,132,255,.28)}
+  canvas.ann{position:absolute;inset:0;pointer-events:none;touch-action:none}
+  canvas.ann.live{pointer-events:auto;cursor:crosshair}
+  mark.hl{padding:0;border-radius:2px}
+  mark.hl-y{background:rgba(255,213,74,.75)} mark.hl-p{background:rgba(255,143,179,.7)}
+  mark.hl-g{background:rgba(120,220,120,.7)} mark.hl-b{background:rgba(140,190,255,.7)}
+  #status{padding:2px 0 0;text-align:center;font-size:11px;color:var(--muted)}
+  #loader{padding:60px;text-align:center;color:var(--muted);font-size:14px}
+  .err{margin:40px auto;max-width:520px;background:#fff;border:1px solid #f3b7b7;border-radius:12px;padding:18px;font-size:13px;color:#7a1f1f}
+  @media (max-width:640px){ .doctitle{display:none} #scroller{padding:14px 6px 40px} }
+</style>
+</head>
+<body>
+<div class="mac" id="mac">
+  <div class="titlebar">
+    <div class="lights"><span class="r"></span><span class="y"></span><span class="g" id="btnFullTop" title="Full screen"></span></div>
+    <div class="doctitle">Paper 1 — Stress-Testing Linear Attention</div>
+    <button class="tbtn" id="btnPaper" title="Warm paper background">☀ Paper</button>
+    <button class="tbtn" id="btnFull" title="Full screen">⛶ Full</button>
+  </div>
+  <div class="toolbar">
+    <div class="grp">
+      <button class="tool" id="btnPrev" title="Previous page">▲</button>
+      <input class="pagebox" id="pageNum" value="1" inputmode="numeric">
+      <span style="color:var(--muted)">/ <span id="pageCount">–</span></span>
+      <button class="tool" id="btnNext" title="Next page">▼</button>
+    </div>
+    <div class="grp">
+      <button class="tool" id="btnZout" title="Zoom out">−</button>
+      <span id="zoomLbl" style="min-width:44px;text-align:center">100%</span>
+      <button class="tool" id="btnZin" title="Zoom in">+</button>
+      <button class="tool" id="btnFit" title="Fit width">⇔</button>
+    </div>
+    <div class="grp" id="tools">
+      <button class="tool on" data-tool="select" title="Select text">➤</button>
+      <button class="tool" data-tool="pen" title="Pen">✎</button>
+      <button class="tool" data-tool="marker" title="Highlighter pen">🖍</button>
+      <button class="tool" data-tool="eraser" title="Eraser (click a stroke or highlight)">⌫</button>
+      <button class="tool" id="btnHL" title="Highlight current text selection">HL</button>
+    </div>
+    <div class="grp" id="colors">
+      <button class="sw on" data-c="y" style="background:#ffd54a" title="Yellow"></button>
+      <button class="sw" data-c="p" style="background:#ff8fb3" title="Pink"></button>
+      <button class="sw" data-c="g" style="background:#78dc78" title="Green"></button>
+      <button class="sw" data-c="b" style="background:#8cbeff" title="Blue"></button>
+      <input type="range" id="penSize" min="2" max="12" value="4" title="Pen size">
+    </div>
+    <div class="grp">
+      <button class="tool" id="btnUndo" title="Undo last stroke/highlight on page">↩</button>
+      <button class="tool" id="btnClearPage" title="Clear this page">🧹</button>
+      <button class="tool" id="btnDL" title="Download PDF">⬇</button>
+    </div>
+  </div>
+  <div id="scroller"><div id="loader">Loading paper…</div></div>
+  <div id="status"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+(function(){
+  "use strict";
+  var scroller=document.getElementById('scroller'), mac=document.getElementById('mac');
+  var store={get:function(k,d){try{var v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
+             set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+  var LS_HL='paper1.hl.v1', LS_PEN='paper1.pen.v1';
+  var S={pdf:null,n:0,scale:1.25,tool:'select',color:'y',size:4,built:{},current:1,
+         hl:store.get(LS_HL,[]), pen:store.get(LS_PEN,{})};
+  var HLCLS={y:'hl-y',p:'hl-p',g:'hl-g',b:'hl-b'};
+  function status(m){document.getElementById('status').textContent=m||'';}
+
+  function fail(msg){
+    scroller.innerHTML='';
+    var d=document.createElement('div');d.className='err';
+    d.textContent='Could not load the paper viewer: '+msg+' (PDF.js needs internet on first load; annotations work offline after that.)';
+    scroller.appendChild(d);
+  }
+  if(typeof pdfjsLib==='undefined'){fail('pdf.js CDN unreachable.');return;}
+  pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+  var PDF_B64="__PDF_DATA__";
+  var raw; try{ raw=atob(PDF_B64); }catch(e){ fail('embedded PDF data is corrupt.'); return; }
+  var bytes=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++) bytes[i]=raw.charCodeAt(i);
+
+  pdfjsLib.getDocument({data:bytes}).promise.then(function(pdf){
+    S.pdf=pdf; S.n=pdf.numPages;
+    document.getElementById('pageCount').textContent=S.n;
+    scroller.innerHTML='';
+    for(var p=1;p<=S.n;p++){ buildShell(p); }
+    observe(); fit(true); status('Scroll to read · select text then HL to highlight · pen draws on the page');
+  }).catch(function(e){ fail(e && e.message || e); });
+
+  function buildShell(p){
+    var wrap=document.createElement('div'); wrap.className='page'; wrap.dataset.page=p; wrap.id='pg'+p;
+    var c=document.createElement('canvas'); c.className='main'; wrap.appendChild(c);
+    var t=document.createElement('div'); t.className='textLayer'; wrap.appendChild(t);
+    var a=document.createElement('canvas'); a.className='ann'; wrap.appendChild(a);
+    wirePen(a,p);
+    scroller.appendChild(wrap); S.built[p]={wrap:wrap,done:false};
+  }
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      var p=+e.target.dataset.page;
+      if(e.isIntersecting){ renderPage(p); setCurrent(p); }
+    });
+  },{root:scroller,threshold:0.25});
+  function observe(){ Object.keys(S.built).forEach(function(p){ io.observe(S.built[p].wrap); }); }
+  function setCurrent(p){ S.current=p; document.getElementById('pageNum').value=p; }
+
+  function renderPage(p){
+    var B=S.built[p]; if(!B||B.done&&B.scale===S.scale) return;
+    S.pdf.getPage(p).then(function(page){
+      var dpr=Math.min(window.devicePixelRatio||1,2);
+      var vp=page.getViewport({scale:S.scale});
+      var cv=B.wrap.querySelector('canvas.main');
+      cv.width=Math.floor(vp.width*dpr); cv.height=Math.floor(vp.height*dpr);
+      cv.style.width=vp.width+'px'; cv.style.height=vp.height+'px';
+      var ctx=cv.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+      page.render({canvasContext:ctx,viewport:vp}).promise.then(function(){
+        var tl=B.wrap.querySelector('.textLayer');
+        tl.style.width=vp.width+'px'; tl.style.height=vp.height+'px';
+        return page.getTextContent().then(function(tc){
+          renderTextLayer(tl,tc,vp); restoreHL(p,tl); sizeOverlay(B,vp); redrawStrokes(p);
+          B.done=true; B.scale=S.scale; updateZoom();
+        });
+      });
+    });
+  }
+  function renderTextLayer(tl,tc,vp){
+    tl.innerHTML='';
+    pdfjsLib.renderTextLayer({textContentSource:tc,container:tl,viewport:vp,textDivs:[]});
+  }
+  function sizeOverlay(B,vp){
+    var a=B.wrap.querySelector('canvas.ann'), dpr=Math.min(window.devicePixelRatio||1,2);
+    a.width=Math.floor(vp.width*dpr); a.height=Math.floor(vp.height*dpr);
+    a.style.width=vp.width+'px'; a.style.height=vp.height+'px';
+    a.classList.toggle('live',S.tool==='pen'||S.tool==='marker');
+  }
+  /* ---------- text highlight ---------- */
+  function markClass(){return 'hl '+HLCLS[S.color];}
+  function eachRange(fn){
+    var sel=window.getSelection(); if(!sel||!sel.rangeCount) return false;
+    for(var i=0;i<sel.rangeCount;i++){ try{fn(sel.getRangeAt(i));}catch(e){} }
+    return true;
+  }
+  function pageOf(node){ var el=node.nodeType===1?node:node.parentNode;
+    while(el&&!(el.classList&&el.classList.contains('page'))) el=el.parentNode;
+    return el?+el.dataset.page:null; }
+  document.getElementById('btnHL').addEventListener('click',function(){
+    if(!eachRange(function(r){
+      var txt=r.toString(); if(!txt.trim()) return;
+      var p=pageOf(r.commonAncestorContainer)||S.current;
+      var m=document.createElement('mark'); m.className=markClass();
+      try{ r.surroundContents(m); }
+      catch(e){ m.appendChild(r.extractContents()); r.insertNode(m); }
+      S.hl.push({page:p,text:txt.slice(0,400),color:S.color});
+    })) return;
+    store.set(LS_HL,S.hl); window.getSelection().removeAllRanges();
+    status('Highlighted · saved in this browser');
+  });
+  function restoreHL(p,tl){
+    S.hl.filter(function(h){return h.page===p;}).forEach(function(h){ findAndWrap(tl,h.text,h.color); });
+  }
+  function findAndWrap(tl,needle,color){
+    var nodes=[]; (function walk(n){ if(n.nodeType===3&&n.nodeValue.trim()) nodes.push(n);
+      else n.childNodes.forEach(walk); })(tl);
+    var full=nodes.map(function(n){return n.nodeValue;}).join('');
+    var at=full.indexOf(needle.slice(0,80)); if(at<0) return;
+    var end=at+Math.min(needle.length,full.length-at), acc=0, r=document.createRange(), s=null,e=null,so=0,eo=0;
+    for(var i=0;i<nodes.length;i++){ var len=nodes[i].nodeValue.length;
+      if(s===null&&acc+len>at){s=nodes[i];so=at-acc;} if(s!==null&&acc+len>=end){e=nodes[i];eo=end-acc;break;} acc+=len; }
+    if(!s||!e) return;
+    try{ r.setStart(s,so); r.setEnd(e,eo);
+      var m=document.createElement('mark'); m.className='hl '+HLCLS[color];
+      try{r.surroundContents(m);}catch(err){m.appendChild(r.extractContents());r.insertNode(m);}
+    }catch(err){}
+  }
+  /* ---------- pen / marker / eraser ---------- */
+  var PENC={y:'#c9a100',p:'#e0508a',g:'#2fae4e',b:'#2f7fe0'};
+  function penc(){return PENC[S.color];}
+  function strokes(p){ if(!S.pen[p]) S.pen[p]=[]; return S.pen[p]; }
+  function redrawStrokes(p){
+    var B=S.built[p]; if(!B) return;
+    var a=B.wrap.querySelector('canvas.ann'), dpr=Math.min(window.devicePixelRatio||1,2);
+    var ctx=a.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0); ctx.clearRect(0,0,a.width,a.height);
+    var W=a.clientWidth||a.width/dpr, H=a.clientHeight||a.height/dpr;
+    strokes(p).forEach(function(st){
+      ctx.strokeStyle=st.color; ctx.lineWidth=st.size; ctx.lineCap='round'; ctx.lineJoin='round';
+      ctx.globalAlpha=st.mode==='marker'?0.35:0.95; ctx.beginPath();
+      st.pts.forEach(function(pt,i){ var x=pt[0]*W,y=pt[1]*H; i?ctx.lineTo(x,y):ctx.moveTo(x,y); });
+      ctx.stroke(); ctx.globalAlpha=1;
+    });
+  }
+  function wirePen(a,p){
+    var drawing=null;
+    function pos(e){ var r=a.getBoundingClientRect();
+      return [(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]; }
+    a.addEventListener('pointerdown',function(e){
+      if(S.tool!=='pen'&&S.tool!=='marker') return;
+      e.preventDefault(); a.setPointerCapture(e.pointerId);
+      drawing={pts:[pos(e)],color:penc(),size:S.tool==='marker'?S.size*3:S.size,mode:S.tool};
+    });
+    a.addEventListener('pointermove',function(e){
+      if(!drawing) return; drawing.pts.push(pos(e));
+      var B=S.built[p], dpr=Math.min(window.devicePixelRatio||1,2);
+      var ctx=a.getContext('2d'); ctx.setTransform(dpr,0,0,dpr,0,0);
+      var W=a.clientWidth,H=a.clientHeight,n=drawing.pts.length;
+      ctx.strokeStyle=drawing.color; ctx.lineWidth=drawing.size; ctx.lineCap='round';
+      ctx.globalAlpha=drawing.mode==='marker'?0.35:0.95; ctx.beginPath();
+      var q0=drawing.pts[n-2],q1=drawing.pts[n-1];
+      ctx.moveTo(q0[0]*W,q0[1]*H); ctx.lineTo(q1[0]*W,q1[1]*H); ctx.stroke(); ctx.globalAlpha=1;
+    });
+    function end(e){ if(!drawing) return;
+      if(drawing.pts.length>1){strokes(p).push(drawing);store.set(LS_PEN,S.pen);} drawing=null; redrawStrokes(p); }
+    a.addEventListener('pointerup',end); a.addEventListener('pointercancel',end);
+  }
+  function eraseAt(p,pt){
+    var arr=strokes(p);
+    for(var i=arr.length-1;i>=0;i--){ var st=arr[i];
+      for(var j=0;j<st.pts.length;j++){ var dx=st.pts[j][0]-pt[0],dy=st.pts[j][1]-pt[1];
+        if(dx*dx+dy*dy<0.0009){arr.splice(i,1);store.set(LS_PEN,S.pen);redrawStrokes(p);return;} } }
+  }
+  document.addEventListener('click',function(e){
+    if(S.tool!=='eraser') return;
+    if(e.target&&e.target.classList&&e.target.classList.contains('hl')){
+      var m=e.target, p=pageOf(m)||S.current, txt=m.textContent;
+      m.outerHTML=m.textContent;
+      S.hl=S.hl.filter(function(h){return !(h.page===p&&h.text.slice(0,80)===txt.slice(0,80));});
+      store.set(LS_HL,S.hl); return;
+    }
+    var pg=e.target&&e.target.closest?e.target.closest('.page'):null;
+    if(pg){ var r=pg.getBoundingClientRect();
+      eraseAt(+pg.dataset.page,[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]); }
+  },true);
+  /* ---------- toolbar wiring ---------- */
+  document.getElementById('tools').addEventListener('click',function(e){
+    var b=e.target.closest('[data-tool]'); if(!b) return;
+    S.tool=b.dataset.tool;
+    this.querySelectorAll('.tool').forEach(function(x){x.classList.toggle('on',x===b);});
+    Object.keys(S.built).forEach(function(p){ var B=S.built[p];
+      B.wrap.querySelector('canvas.ann').classList.toggle('live',
+        S.tool==='pen'||S.tool==='marker'); });
+    status(S.tool==='select'?'Select mode — drag text, then HL to highlight':
+      S.tool==='eraser'?'Eraser — click a pen stroke or a highlight to remove it':'Pen live — draw on the page');
+  });
+  document.getElementById('colors').addEventListener('click',function(e){
+    var s=e.target.closest('.sw'); if(!s) return;
+    S.color=s.dataset.c;
+    this.querySelectorAll('.sw').forEach(function(x){x.classList.toggle('on',x===s);});
+  });
+  document.getElementById('penSize').addEventListener('input',function(e){S.size=+e.target.value;});
+  function rerenderAll(){ var sr=scroller.getBoundingClientRect();
+    Object.keys(S.built).forEach(function(p){ var B=S.built[p]; B.done=false;
+      var r=B.wrap.getBoundingClientRect();
+      if(r.bottom>sr.top-600&&r.top<sr.bottom+600) renderPage(+p); });
+  }
+  function updateZoom(){document.getElementById('zoomLbl').textContent=Math.round(S.scale*100)+'%';}
+  document.getElementById('btnZin').addEventListener('click',function(){S.scale=Math.min(3,S.scale*1.2);rerenderAll();updateZoom();});
+  document.getElementById('btnZout').addEventListener('click',function(){S.scale=Math.max(0.5,S.scale/1.2);rerenderAll();updateZoom();});
+  function fit(first){
+    S.pdf.getPage(1).then(function(pg){ var v=pg.getViewport({scale:1});
+      S.scale=Math.max(0.5,(scroller.clientWidth-60)/v.width); rerenderAll(); updateZoom(); });
+  }
+  document.getElementById('btnFit').addEventListener('click',function(){fit(false);});
+  function go(p){ p=Math.max(1,Math.min(S.n,p)); var el=document.getElementById('pg'+p);
+    if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }
+  document.getElementById('btnPrev').addEventListener('click',function(){go(S.current-1);});
+  document.getElementById('btnNext').addEventListener('click',function(){go(S.current+1);});
+  document.getElementById('pageNum').addEventListener('change',function(e){go(+e.target.value||1);});
+  document.getElementById('btnUndo').addEventListener('click',function(){
+    var arr=strokes(S.current);
+    if(arr.length){arr.pop();store.set(LS_PEN,S.pen);redrawStrokes(S.current);return;}
+    var i=S.hl.map(function(h){return h.page;}).lastIndexOf(S.current);
+    if(i>=0){S.hl.splice(i,1);store.set(LS_HL,S.hl);
+      var B=S.built[S.current]; if(B){B.done=false;renderPage(S.current);}}
+  });
+  document.getElementById('btnClearPage').addEventListener('click',function(){
+    if(!confirm('Clear annotations on page '+S.current+'?'))return;
+    S.pen[S.current]=[];store.set(LS_PEN,S.pen);
+    S.hl=S.hl.filter(function(h){return h.page!==S.current;});store.set(LS_HL,S.hl);
+    var B=S.built[S.current]; if(B){B.done=false;renderPage(S.current);}
+  });
+  document.getElementById('btnDL').addEventListener('click',function(){
+    var a=document.createElement('a');
+    a.href='data:application/pdf;base64,'+PDF_B64;
+    a.download='Paper_1_Stress_Testing_Linear_Attention.pdf'; a.click();
+  });
+  function toggleFull(){
+    mac.classList.toggle('expanded');
+    var on=mac.classList.contains('expanded');
+    document.getElementById('btnFull').textContent=on?'✕ Exit':'⛶ Full';
+    try{ if(on&&document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(function(){});
+      else if(!on&&document.exitFullscreen&&document.fullscreenElement) document.exitFullscreen().catch(function(){});}catch(e){}
+  }
+  document.getElementById('btnFull').addEventListener('click',toggleFull);
+  document.getElementById('btnFullTop').addEventListener('click',toggleFull);
+  document.getElementById('btnPaper').addEventListener('click',function(){
+    document.body.classList.toggle('paper'); this.classList.toggle('on');
+  });
+})();
+</script>
+</body>
+</html>

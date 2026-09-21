@@ -167,6 +167,7 @@ def sidebar_nav():
     st.sidebar.title("LINEAR ATTENTION STRESS-TEST LAB")
     return st.sidebar.radio("Page", [
         "Dashboard",
+        "Paper",
         "Associative Recall",
         "Sequence Length",
         "Numerical Saturation",
@@ -473,12 +474,95 @@ def page_about():
     st.caption(SOFTMAX_NOTE)
     st.json(env_info())
 
+
+# ---------------------------------------------------------------- paper registry
+# Extensible paper metadata. To add another paper, append a dict with the same
+# keys — no component changes needed. pdf_url must be a stable public file URL
+# (GitHub raw). No API keys, tokens, or backends: the repository is public and
+# the manuscript PDFs are intentionally public.
+GITHUB_RAW = "https://raw.githubusercontent.com/Geeko001/stress-lab-proof/main"
+
+PAPERS = [
+    {
+        "id": "paper-01",
+        "title": "Stress-Testing Linear Attention: Architectural Breakpoints and Context Failure Modes",
+        "pdf_url": f"{GITHUB_RAW}/Sharma_Stress-Testing_Linear_Attention_Manuscript.pdf",
+        "filename": "Sharma_Stress-Testing_Linear_Attention_Manuscript.pdf",
+        "note": "Final manuscript (canonical paper source).",
+    },
+]
+
+
+def get_paper(paper_id):
+    for paper in PAPERS:
+        if paper["id"] == paper_id:
+            return paper
+    return PAPERS[0]
+
+
+@st.cache_data(show_spinner=False)
+def fetch_pdf_bytes(url, timeout=60):
+    """Fetch the public GitHub-hosted PDF bytes. Raises on failure."""
+    import urllib.request
+    req = urllib.request.Request(url, headers={"User-Agent": "stress-lab-paper-reader"})
+    with urllib.request.urlopen(req, timeout=timeout) as resp:
+        data = resp.read()
+    if not data.startswith(b"%PDF"):
+        raise ValueError("URL did not return a PDF document.")
+    return data
+
+
+def build_viewer_html(pdf_bytes):
+    """Inject PDF bytes into the viewer template. Raises if template is broken."""
+    import base64
+    tpl_path = Path(__file__).parent / "assets" / "paper_viewer.html"
+    if not tpl_path.exists():
+        raise FileNotFoundError("Viewer template not found at assets/paper_viewer.html.")
+    html = tpl_path.read_text(encoding="utf-8").replace(
+        "__PDF_DATA__",
+        base64.b64encode(pdf_bytes).decode("ascii"))
+    if "__PDF_DATA__" in html:
+        raise ValueError("Viewer template placeholder was not fully replaced.")
+    return html
+
+
+def page_paper():
+    st.title("Research Papers")
+    st.caption("Papers load directly from the public GitHub repository — no login, "
+               "no backend. Select a paper, read it, or download the PDF.")
+    options = {paper["title"]: paper["id"] for paper in PAPERS}
+    title = st.selectbox("Paper", list(options.keys()))
+    paper = get_paper(options[title])
+    st.markdown(f"**{paper['title']}**")
+    st.caption(paper.get("note", ""))
+    st.link_button("Read Paper (new tab)", paper["pdf_url"])
+    try:
+        with st.spinner("Loading paper from GitHub…"):
+            pdf_bytes = fetch_pdf_bytes(paper["pdf_url"])
+    except Exception:
+        st.error("Could not load the paper from GitHub. Check your connection, "
+                 "or open it directly:")
+        st.code(paper["pdf_url"])
+        st.link_button("Open PDF on GitHub", paper["pdf_url"])
+        return
+    st.download_button("Download PDF", pdf_bytes, paper["filename"], "application/pdf")
+    try:
+        st.components.v1.html(build_viewer_html(pdf_bytes), height=950, scrolling=False)
+    except Exception:
+        st.error("Reader failed to start, but the PDF itself loaded fine — "
+                 "use Read Paper or Download PDF above.")
+    st.caption("Source: papers/paper-01-stress-testing-linear-attention.md · "
+               "Working draft: Paper_1_Draft_v3.md · Evidence: public_evidence/")
+
+
 # ---------------------------------------------------------------- main
 page = sidebar_nav()
 dim, seed, trials, precision, feature_map, override = global_settings()
 
 if page == "Dashboard":
     page_dashboard()
+elif page == "Paper":
+    page_paper()
 elif page == "Associative Recall":
     page_recall(dim, seed, trials, precision, feature_map, override)
 elif page == "Sequence Length":
